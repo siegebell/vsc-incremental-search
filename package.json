@@ -27,7 +27,7 @@
       {"command": "extension.incrementalSearch.backwardExpand", "key": "ctrl+alt+u", "when": "editorTextFocus && incrementalSearch"},
       {"command": "extension.incrementalSearch.backspace", "key": "backspace", "when": "editorTextFocus && incrementalSearch"},
       {"command": "extension.incrementalSearch.toggleRegExp", "key": "alt+r", "when": "editorTextFocus && incrementalSearch"},
-      {"command": "extension.incrementalSearch.toggleCaseSensitive", "key": "alt+c", "when": "editorTextFocus && incrementalSearch"},
+      {"command": "extension.incrementalSearch.toggleCaseSensitivity", "key": "alt+c", "when": "editorTextFocus && incrementalSearch"},
       
       {"command": "extension.incrementalSearch.stop", "key": "escape", "when": "editorTextFocus && incrementalSearch"}
     ]

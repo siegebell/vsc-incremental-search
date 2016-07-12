@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
 		useRegExp = !useRegExp;
 		updateSearch();
 	});
-	registerTextEditorCommand('extension.incrementalSearch.toggleCaseSensitive', (editor: vscode.TextEditor) => {
+	registerTextEditorCommand('extension.incrementalSearch.toggleCaseSensitivity', (editor: vscode.TextEditor) => {
 		caseSensitive = !caseSensitive;
 		updateSearch();
 	});
