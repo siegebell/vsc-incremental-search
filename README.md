@@ -1,6 +1,6 @@
 # README: Incremental search for vscode
 
-This extension provides incremental search for each cursor, using regular expressions.
+This extension provides an incremental search mode, where you interactively provide a search term that advances each cursor and optionally expands the selection.
 
 Upon entering incremental search mode (e.g. `ctrl+i` or `ctrl+u`), the text you type will construct a regular expression (or optionally a literal string) to use as a search term. All existing cursors will advance to select the next match. Pressing backspace will delete the last character of the regular expression. Editing the search term will retry the search from the previous point. Pressing search again will advance the search to the next match. Editing the buffer, manually changing the selection, or changing the editor focus will exit incremental searm mode.
 
