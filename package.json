@@ -10,6 +10,7 @@
   "categories": [
     "Other"
   ],
+  "license": "MIT",
   "activationEvents": [
     "*"
   ],
@@ -21,9 +22,9 @@
     }],
     "keybindings": [
       {"command": "extension.incrementalSearch.forward", "key": "ctrl+i", "when": "editorTextFocus"},
-      {"command": "extension.incrementalSearch.reverse", "key": "ctrl+u", "when": "editorTextFocus"},
+      {"command": "extension.incrementalSearch.backward", "key": "ctrl+u", "when": "editorTextFocus"},
       {"command": "extension.incrementalSearch.expand", "key": "ctrl+alt+i", "when": "editorTextFocus && incrementalSearch"},
-      {"command": "extension.incrementalSearch.reverseExpand", "key": "ctrl+alt+u", "when": "editorTextFocus && incrementalSearch"},
+      {"command": "extension.incrementalSearch.backwardExpand", "key": "ctrl+alt+u", "when": "editorTextFocus && incrementalSearch"},
       {"command": "extension.incrementalSearch.backspace", "key": "backspace", "when": "editorTextFocus && incrementalSearch"},
       {"command": "extension.incrementalSearch.toggleRegExp", "key": "alt+r", "when": "editorTextFocus && incrementalSearch"},
       {"command": "extension.incrementalSearch.toggleCaseSensitive", "key": "alt+c", "when": "editorTextFocus && incrementalSearch"},
@@ -39,5 +40,9 @@
   "devDependencies": {
 		"typescript": "^1.6.2",
 		"vscode": "^0.11.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/siegebell/vsc-incremental-search.git"
   }
 }

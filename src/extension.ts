@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import {SearchExpr} from './SearchExpr';
 
 let processingSearch : boolean = false;
-let reverseSearch = false;
+let backwardSearch = false;
 let searchTerm = '';
 let initialSelections : vscode.Selection[];
 let status : {title: vscode.StatusBarItem, matchCase: vscode.StatusBarItem, useRegExp: vscode.StatusBarItem};
@@ -41,12 +41,12 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	registerTextEditorCommand('extension.incrementalSearch.reverse', (editor: vscode.TextEditor) => {
+	registerTextEditorCommand('extension.incrementalSearch.backward', (editor: vscode.TextEditor) => {
 		if(!processingSearch) {
-			beginSearch(editor,{reverse:true});
+			beginSearch(editor,{backward:true});
 		} else {
 			// Advance the search
-			advanceSearch({reverse: true});
+			advanceSearch({backward: true});
 		}
 	});
 
@@ -56,9 +56,9 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	registerTextEditorCommand('extension.incrementalSearch.reverseExpand', (editor: vscode.TextEditor) => {
+	registerTextEditorCommand('extension.incrementalSearch.backwardExpand', (editor: vscode.TextEditor) => {
 		if(processingSearch) {
-			advanceSearch({reverse: true, expand: true});
+			advanceSearch({backward: true, expand: true});
 		}
 	});
 
@@ -120,7 +120,7 @@ function hideStatus() {
 	status.useRegExp.hide();
 }
 
-function updateStatus(options = {reverse: false}) {
+function updateStatus(options = {backward: false}) {
 	status.title.text = 'incremental search: ' + searchTerm;
 	status.title.color = 'white';
 	status.matchCase.color = caseSensitive ? 'white' : 'red';
@@ -138,9 +138,9 @@ async function stopSearch(forwardCommand = '', ...args: any[]) {
 		vscode.commands.executeCommand(forwardCommand, args);
 }
 
-function beginSearch(editor: vscode.TextEditor, options = {reverse: false}) {
+function beginSearch(editor: vscode.TextEditor, options = {backward: false}) {
 	processingSearch = true;
-	reverseSearch = options.reverse;
+	backwardSearch = options.backward;
 	searchTerm = '';
 	initialSelections = editor.selections;
 	updateStatus(options);
@@ -148,13 +148,13 @@ function beginSearch(editor: vscode.TextEditor, options = {reverse: false}) {
 	vscode.commands.executeCommand('setContext', 'incrementalSearch', true);
 }
 
-function advanceSearch(options: {reverse?:boolean, expand?:boolean} = {reverse:false}) {
-	reverseSearch = options.reverse;
+function advanceSearch(options: {backward?:boolean, expand?:boolean} = {backward:false}) {
+	backwardSearch = options.backward;
 	const editor = vscode.window.activeTextEditor;
 	let nextSelections = [];
 	for(const sel of editor.selections) {
 		// nextSelections.push(new vscode.Selection(sel.active,sel.active));
-		if(options.reverse)
+		if(options.backward)
 		  nextSelections.push(new vscode.Selection(sel.start,sel.start));
 		else
 		  nextSelections.push(new vscode.Selection(sel.start.translate(0,1),sel.start.translate(0,1)));
@@ -178,11 +178,11 @@ function updateSearch(options : {expand?:boolean} = {expand:false}) {
 		for(const sel of initialSelections) {
 			const start = editor.document.offsetAt(sel.active);
 			search.lastIndex = start;
-			const match = search.exec(text,reverseSearch);
+			const match = search.exec(text,backwardSearch);
 			if(match !== null) {
 				const newAnchor = editor.document.positionAt(match.index);
 				const newActive = editor.document.positionAt(match.index+match[0].length);
-				// if(reverseSearch)
+				// if(backwardSearch)
 				// 	nextSelections.push(new vscode.Selection(newActive,newAnchor));
 				// else
 					nextSelections.push(new vscode.Selection(newAnchor, newActive));
