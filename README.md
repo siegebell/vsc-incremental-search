@@ -1,6 +1,4 @@
-# README
-
-## Incremental search for vscode
+# README: Incremental search for vscode
 
 This extension provides incremental search for each cursor, using regular expressions.
 
