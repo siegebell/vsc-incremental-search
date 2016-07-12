@@ -1,8 +1,15 @@
 # README: Incremental search for vscode
 
-This extension provides an incremental search mode, where you interactively provide a search term that advances each cursor and optionally expands the selection.
+This extension provides an incremental search mode that works with multiple cursors, where you interactively provide a search term that advances each cursor and optionally expands your selections.
 
-Upon entering incremental search mode (e.g. `ctrl+i` or `ctrl+u`), the text you type will construct a regular expression (or optionally a literal string) to use as a search term. All existing cursors will advance to select the next match. Pressing backspace will delete the last character of the regular expression. Editing the search term will retry the search from the previous point. Pressing search again will advance the search to the next match. Editing the buffer, manually changing the selection, or changing the editor focus will exit incremental searm mode.
+Upon entering incremental search mode (e.g. `ctrl+i` or `ctrl+u`), the text you type will construct a regular expression (or optionally a literal string) to use as a search term. All existing cursors will advance to select the next match. Pressing backspace will delete the last character of the search term. Editing the search term will retry the search from the previous point. Initiating incremental search again will advance the search to the next match. Editing the document buffer, manually changing the selection, or changing the editor focus will exit incremental search mode.
+
+## Example Uses
+
+1. You have multiple cursors and want each one to select the next string: enter incremental search mode and type `".*?"`.
+2. You want to advance all cursors to just after the next comma: enter incremental search mode, type `,*`, and then press `right`.
+
+## Commands
 
 ### Status bar
 While in incremental search mode, the status bar will display the current search term and button-indicators to toggle regular expression matching and case sensitivity. If the regular expression is ill-formed, then it will appear red. If there is not match, then the search term will appear yellow.
