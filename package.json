@@ -2,7 +2,7 @@
     "name": "incremental-search",
     "displayName": "Incremental Search",
     "description": "Incremental search",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "publisher": "siegebell",
     "engines": {
         "vscode": "^1.3.x"
