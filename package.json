@@ -63,7 +63,76 @@
                 "key": "escape",
                 "when": "editorTextFocus && incrementalSearch"
             }
-        ]
+        ],
+        "configuration": {
+          "title": "Incremental Search",
+          "type": "object",
+          "properties": {
+            "incrementalSearch.styleMatches": {
+                "enum": ["never", "always", "multigroups"],
+                "description": "When to apply a style to the resulting matches. 'multigroups' applies the style to the full regexp match when it returns multiple matching groups.",
+                "default": "subgroup"
+            },
+            "incrementalSearch.matchStyle": {
+                "type": "object",
+                "properties": {
+                    "backgroundColor": {"type": "string"},
+                    "color": {"type": "string"},
+                    "border": {"type": "string"},
+                    "borderRadius": {"type": "string"},
+                    "borderColor": {"type": "string"},
+                    "borderStyle": {"type": "string"},
+                    "borderSpacing": {"type": "string"},
+                    "borderwidth": {"type": "string"},
+                    "outline": {"type": "string"},
+                    "outlineColor": {"type": "string"},
+                    "outlineStyle": {"type": "string"},
+                    "outlineWidth": {"type": "string"},
+                    "dark": {
+                        "type": "object",
+                        "properties": {
+                            "backgroundColor": {"type": "string"},
+                            "color": {"type": "string"},
+                            "border": {"type": "string"},
+                            "borderRadius": {"type": "string"},
+                            "borderColor": {"type": "string"},
+                            "borderStyle": {"type": "string"},
+                            "borderSpacing": {"type": "string"},
+                            "borderwidth": {"type": "string"},
+                            "outline": {"type": "string"},
+                            "outlineColor": {"type": "string"},
+                            "outlineStyle": {"type": "string"},
+                            "outlineWidth": {"type": "string"}
+                        },
+                        "description": "Styles to be applied for dark themes"
+                    },
+                    "light": {
+                        "type": "object",
+                        "properties": {
+                            "backgroundColor": {"type": "string"},
+                            "color": {"type": "string"},
+                            "border": {"type": "string"},
+                            "borderRadius": {"type": "string"},
+                            "borderColor": {"type": "string"},
+                            "borderStyle": {"type": "string"},
+                            "borderSpacing": {"type": "string"},
+                            "borderwidth": {"type": "string"},
+                            "outline": {"type": "string"},
+                            "outlineColor": {"type": "string"},
+                            "outlineStyle": {"type": "string"},
+                            "outlineWidth": {"type": "string"}
+                        },
+                        "description": "Styles to be applied for light themes"
+                    }
+                },
+                "description": "CSS style properties to be applied to the current substring matches.",
+                "default": {
+                    "dark": {"border": "1pt rgba(255,255,255,50) dashed"},
+                    "light": {"border": "1pt rgba(0,0,0,50) dashed"}
+                } 
+            }
+          }
+        }
     },
     "scripts": {
         "vscode:prepublish": "node ./node_modules/vscode/bin/compile",

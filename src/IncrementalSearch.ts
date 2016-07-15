@@ -43,6 +43,7 @@ function getOrDefault<T>(x: T, d: T) {
 export class IncrementalSearch {
 	private currentSelections : vscode.Selection[];
 	private initialSelections : vscode.Selection[];
+	private matchedRanges: vscode.Range[]= [];
 
 	constructor(
 		private editor: vscode.TextEditor,
@@ -81,52 +82,73 @@ export class IncrementalSearch {
 				nextSelections.push(new vscode.Selection(sel.start.translate(0,1),sel.start.translate(0,1)));
 			}
 		this.initialSelections = nextSelections;
-		this.update(options);
+		return this.update(options);
 	}
 
 	public getCurrentSelections() : vscode.Selection[] {
 		return this.currentSelections;
 	}
 
+	public getMatchedRanges() {
+		return this.matchedRanges;
+	}
+
+	public getEditor() {
+		return this.editor;
+	}
+
 	public update(options: SearchOptions = DEFAULT_OPTIONS) {
-		this.applyOptions(options);
+		try {
+			this.applyOptions(options);
 
-		const text = this.editor.document.getText();
-		const search = new SearchExpr(this.searchTerm,true,this.useRegExp,this.caseSensitive);
-		let nextSelections = [];
-		if(options.expand)
-			nextSelections = this.currentSelections;
+			const text = this.editor.document.getText();
+			const search = new SearchExpr(this.searchTerm,true,this.useRegExp,this.caseSensitive);
+			let nextSelections = [];
+			if(options.expand)
+				nextSelections = this.currentSelections;
 
-		for(const sel of this.initialSelections) {
-			const start = this.editor.document.offsetAt(sel.active);
-			search.lastIndex = start;
-			const match = search.exec(text,this.direction == SearchDirection.backward);
-			if(match !== null && match.length > 0) {
-				if(match.length == 1) {
+			this.matchedRanges = [];
+			var matchingGroups = false;
+
+			for(const sel of this.initialSelections) {
+				const start = this.editor.document.offsetAt(sel.active);
+				search.lastIndex = start;
+				const match = search.exec(text,this.direction == SearchDirection.backward);
+				if(match !== null && match.length > 0) {
 					const newAnchor = this.editor.document.positionAt(match.index);
 					const newActive = this.editor.document.positionAt(match.index+match[0].length);
-  				nextSelections.push(new vscode.Selection(newAnchor, newActive));
-				} else {
-					// The regexp contains subgroups
-					// Turn each subgroup into a new selection
-					let offset = 0;
-					match
-						.forEach((m,idx) => {
-							if(idx == 0)
-								return; // skip the first element
-							offset = match[0].indexOf(m,offset);
-							const newAnchor = this.editor.document.positionAt(match.index+offset);
-							offset+= m.length;
-							const newActive = this.editor.document.positionAt(match.index+offset);
-							nextSelections.push(new vscode.Selection(newAnchor, newActive));
-						});
+					this.matchedRanges.push(new vscode.Range(newAnchor, newActive));
+
+					if(match.length == 1) {
+						nextSelections.push(new vscode.Selection(newAnchor, newActive));
+					} else {
+						// The regexp contains subgroups
+						matchingGroups = true;
+						// Turn each subgroup into a new selection
+						let offset = 0;
+						match
+							.forEach((m,idx) => {
+								if(idx == 0 || m===undefined)
+									return; // skip the first element
+								offset = match[0].indexOf(m,offset);
+								const newAnchor = this.editor.document.positionAt(match.index+offset);
+								offset+= m.length;
+								const newActive = this.editor.document.positionAt(match.index+offset);
+								nextSelections.push(new vscode.Selection(newAnchor, newActive));
+							});
+					}
 				}
 			}
-		}
-		if(nextSelections.length > 0)
-			this.setEditorSelections(nextSelections);
-		else
+			if(nextSelections.length > 0)
+				this.setEditorSelections(nextSelections);
+			else
+				this.setEditorSelections(this.initialSelections);
+
+			return {matchedRange: this.matchedRanges, matchedGroups: matchingGroups}
+		} catch(e) {
 			this.setEditorSelections(this.initialSelections);
+			throw e;
+		}
 	}
 
 	private setEditorSelections(selections: vscode.Selection[]) {
@@ -135,6 +157,7 @@ export class IncrementalSearch {
 			return;
 		this.editor.selections = selections;	
 	}
+
 }
 
 

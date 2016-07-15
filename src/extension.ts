@@ -9,6 +9,28 @@ const INCREMENTAL_SEARCH_CONTEXT = 'incrementalSearch';
 let status : SearchStatusBar;
 let search : IncrementalSearch = null;
 
+let matchDecoratation : vscode.TextEditorDecorationType = null;
+
+type DecorateMatchCondition = 'never' | 'always' | 'multigroups';
+interface Configuration {
+  matchStyle: vscode.DecorationRenderOptions,
+  // when to show the style
+  styleMatches: DecorateMatchCondition, 
+}
+
+let configuration : Configuration = {
+  matchStyle: {
+    borderRadius: '50%',
+    dark: {
+      border: '1pt white dashed',
+    },
+    light: {
+      border: '1pt black solid',
+    },
+  },
+  styleMatches: 'always',
+};
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -20,8 +42,14 @@ export function activate(context: vscode.ExtensionContext) {
   }
   vscode.commands.executeCommand('setContext', 'incrementalSearch', false);
 
+  matchDecoratation = vscode.window.createTextEditorDecorationType(configuration.matchStyle);
+  context.subscriptions.push(matchDecoratation);
+
   status = new SearchStatusBar('extension.incrementalSearch.toggleCaseSensitivity', 'extension.incrementalSearch.toggleRegExp');
   context.subscriptions.push(status);
+  loadConfiguration();
+
+  vscode.workspace.onDidChangeConfiguration(loadConfiguration);
 
   registerTextEditorCommand('extension.incrementalSearch.forward', (editor: vscode.TextEditor) => {
     advanceSearch(editor, {direction: SearchDirection.forward});
@@ -49,12 +77,12 @@ export function activate(context: vscode.ExtensionContext) {
   registerTextEditorCommand('extension.incrementalSearch.stop', (editor) => {
     if(search)
       search.cancelSelections();
-    stopSearch();
+    stopSearch("stop command");
   });
-  vscode.window.onDidChangeActiveTextEditor(() => stopSearch());
   vscode.window.onDidChangeTextEditorSelection(onSelectionsChanged);
-  vscode.workspace.onDidChangeTextDocument(() => stopSearch);
-  vscode.workspace.onDidCloseTextDocument(() => stopSearch);
+  vscode.window.onDidChangeActiveTextEditor(() => stopSearch("active editor changed"));
+  vscode.workspace.onDidChangeTextDocument(() => stopSearch("text document changed"));
+  vscode.workspace.onDidCloseTextDocument(() => stopSearch("text document closed"));
 
   registerCommand('extension.incrementalSearch.backspace', () => {
     if(search) {
@@ -71,14 +99,35 @@ export function activate(context: vscode.ExtensionContext) {
 
 }
 
+function loadConfiguration() {
+  configuration = <Configuration><any>vscode.workspace.getConfiguration("incrementalSearch");
+  if(matchDecoratation != null)
+    matchDecoratation.dispose();
+  matchDecoratation = null;
+  matchDecoratation = vscode.window.createTextEditorDecorationType(configuration.matchStyle);
+}
 
 
-async function stopSearch(forwardCommand = '', ...args: any[]) {
-  await vscode.commands.executeCommand('setContext', 'incrementalSearch', false);
-  search = null;
+
+async function stopSearch(reason: string, forwardCommand = '', ...args: any[]) {
+  try {
+    await vscode.commands.executeCommand('setContext', 'incrementalSearch', false);
+  } catch(e) {}
+
+  if(search) {
+    console.log("search stopped: " + reason);
+    search.getEditor().setDecorations(matchDecoratation, []);
+    search = null;
+  }
+
   status.hide();
-  if(forwardCommand)
-    vscode.commands.executeCommand(forwardCommand, args);
+
+  try {
+    if(forwardCommand)
+      await vscode.commands.executeCommand(forwardCommand, args);
+  } catch(e) {
+
+  }
 }
 
 function beginSearch(editor: vscode.TextEditor, options : SearchOptions) {
@@ -103,19 +152,36 @@ function beginSearch(editor: vscode.TextEditor, options : SearchOptions) {
 function advanceSearch(editor: vscode.TextEditor, options: SearchOptions) {
   if(!search)
     beginSearch(editor, options);
-  else
-    search.advance(options);  
+  else {
+    const results = search.advance(options);
+    status.update(search.searchTerm, search.caseSensitive, search.useRegExp);
+    updateMatchDecorations(results);
+  }  
 }
 
+/** If subgroups are matched, then display a decoration over the entire
+ * matching range to help the user identify how the regexp is working
+ * */
+function updateMatchDecorations(results : {matchedRange: vscode.Range[], matchedGroups: boolean}) {
+  if(configuration.styleMatches=='always' || (results.matchedGroups && configuration.styleMatches=='subgroups'))
+    search.getEditor().setDecorations(matchDecoratation, results.matchedRange);
+  else
+    search.getEditor().setDecorations(matchDecoratation, []);
+}
+function clearMatchDecorations() {
+  search.getEditor().setDecorations(matchDecoratation, []);
+}
 
 function updateSearch(options : SearchOptions) : {error?: string} {
   if(!search)
     return;
 
   try {
-    search.update(options);
+    const results = search.update(options);
     status.update(search.searchTerm, search.caseSensitive, search.useRegExp);
+    updateMatchDecorations(results);
   } catch(e) {
+    clearMatchDecorations();
     status.update(search.searchTerm, search.caseSensitive, search.useRegExp);
     if(e instanceof SyntaxError) {
       status.indicateSyntaxError();
@@ -137,10 +203,10 @@ function onSelectionsChanged(event:vscode.TextEditorSelectionChangeEvent) {
   // If the selection has changed and no longer agree's with what the search ex
   const currentSelections = search.getCurrentSelections();
   if(event.selections.length != currentSelections.length)
-    stopSearch();
+    stopSearch("interference on selection");
   for(let idx =0; idx < currentSelections.length; ++idx) {
     if(!currentSelections[idx].isEqual(event.selections[idx])) {
-      stopSearch();
+      stopSearch("interference on selection");
       return;
     }
   }
