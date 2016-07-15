@@ -86,7 +86,7 @@
             "incrementalSearch.styleMatches": {
                 "enum": ["never", "always", "multigroups"],
                 "description": "When to apply a style to the resulting matches. 'multigroups' applies the style to the full regexp match when it returns multiple matching groups.",
-                "default": "subgroup"
+                "default": "always"
             },
             "incrementalSearch.matchStyle": {
                 "type": "object",
