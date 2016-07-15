@@ -74,14 +74,15 @@ export class IncrementalSearch {
 		this.applyOptions(options);
 		let nextSelections = [];
 		if(this.options.direction == SearchDirection.backward)
-			for(const sel of this.currentSelections) {
+			for(const sel of this.matchedRanges) {
 				nextSelections.push(new vscode.Selection(sel.start,sel.start));
   		}
 		else // forward search
-			for(const sel of this.currentSelections) {
+			for(const sel of this.matchedRanges) {
 				nextSelections.push(new vscode.Selection(sel.start.translate(0,1),sel.start.translate(0,1)));
 			}
-		this.initialSelections = nextSelections;
+		if(nextSelections.length > 0)
+      this.initialSelections = nextSelections;
 		return this.update(options);
 	}
 
@@ -103,12 +104,13 @@ export class IncrementalSearch {
 
 			const text = this.editor.document.getText();
 			const search = new SearchExpr(this.searchTerm,true,this.useRegExp,this.caseSensitive);
-			let nextSelections = [];
-			if(options.expand)
-				nextSelections = this.currentSelections;
-
-			this.matchedRanges = [];
 			var matchingGroups = false;
+			let nextSelections = [];
+
+			if(options.expand) {
+				nextSelections = this.currentSelections;
+			} else
+  			this.matchedRanges = [];
 
 			for(const sel of this.initialSelections) {
 				const start = this.editor.document.offsetAt(sel.active);
@@ -141,8 +143,9 @@ export class IncrementalSearch {
 			}
 			if(nextSelections.length > 0)
 				this.setEditorSelections(nextSelections);
-			else
+			else {
 				this.setEditorSelections(this.initialSelections);
+			}
 
 			return {matchedRange: this.matchedRanges, matchedGroups: matchingGroups}
 		} catch(e) {
@@ -160,11 +163,11 @@ export class IncrementalSearch {
 
 }
 
-
-
 function normalizeSelections(selections: vscode.Selection[]) : vscode.Selection[] {
   return selections
 		.sort((x,y) => x.start.isBefore(y.start) ? -1 : x.start.isAfter(y.start) ? 1 : x.end.isBefore(y.start) ? -1 : x.end.isAfter(y.end) ? 1 : 0)
 		.filter((sel,idx,sels) => idx == 0 ? true : !sel.isEqual(sels[idx-1]));
 }
 
+
+// ^[^"\n]*?"([^"\n]*)"[^"\n]*"([^"\n]*)"

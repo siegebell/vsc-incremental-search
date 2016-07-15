@@ -14,10 +14,12 @@ function regexpReverseExec(re: RegExp, text: string, start?: number) {
 	let match : RegExpExecArray;
 	let idx = re.lastIndex;
 	while((match = re.exec(text)) != null && match.index < start && match[0] !== '') {
+		// if(match.length > 1 && match.index+match[1].length >= start)
+		//   break;
 		lastMatch = match;
 		re.lastIndex = match.index+1; // do not jump further than one character from the match
 	}
-	if(match!=null && match.length>0 && match[0] == '')
+	if(match!=null && match.length==0 && match[0] == '')
 		return null;
 	else
 		return lastMatch;
