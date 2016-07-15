@@ -101,10 +101,26 @@ export class IncrementalSearch {
 			const start = this.editor.document.offsetAt(sel.active);
 			search.lastIndex = start;
 			const match = search.exec(text,this.direction == SearchDirection.backward);
-			if(match !== null) {
-				const newAnchor = this.editor.document.positionAt(match.index);
-				const newActive = this.editor.document.positionAt(match.index+match[0].length);
-				nextSelections.push(new vscode.Selection(newAnchor, newActive));
+			if(match !== null && match.length > 0) {
+				if(match.length == 1) {
+					const newAnchor = this.editor.document.positionAt(match.index);
+					const newActive = this.editor.document.positionAt(match.index+match[0].length);
+  				nextSelections.push(new vscode.Selection(newAnchor, newActive));
+				} else {
+					// The regexp contains subgroups
+					// Turn each subgroup into a new selection
+					let offset = 0;
+					match
+						.forEach((m,idx) => {
+							if(idx == 0)
+								return; // skip the first element
+							offset = match[0].indexOf(m,offset);
+							const newAnchor = this.editor.document.positionAt(match.index+offset);
+							offset+= m.length;
+							const newActive = this.editor.document.positionAt(match.index+offset);
+							nextSelections.push(new vscode.Selection(newAnchor, newActive));
+						});
+				}
 			}
 		}
 		if(nextSelections.length > 0)
