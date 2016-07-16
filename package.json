@@ -54,11 +54,6 @@
                 "when": "incrementalSearch"
             },
             {
-                "command": "extension.incrementalSearch.backspace",
-                "key": "backspace",
-                "when": "editorTextFocus && incrementalSearch"
-            },
-            {
                 "command": "extension.incrementalSearch.toggleRegExp",
                 "key": "alt+r",
                 "when": "incrementalSearch"
@@ -69,9 +64,19 @@
                 "when": "incrementalSearch"
             },
             {
+                "command": "extension.incrementalSearch.complete",
+                "key": "enter",
+                "when": "editorTextFocus && incrementalSearchInlineInput"
+            },
+            {
+                "command": "extension.incrementalSearch.backspace",
+                "key": "backspace",
+                "when": "editorTextFocus && incrementalSearchInlineInput"
+            },
+            {
                 "command": "extension.incrementalSearch.stop",
                 "key": "escape",
-                "when": "editorTextFocus && incrementalSearch"
+                "when": "editorTextFocus && incrementalSearchInlineInput"
             }
         ],
         "configuration": {

@@ -44,6 +44,9 @@ export class IncrementalSearch {
 	private currentSelections : vscode.Selection[];
 	private initialSelections : vscode.Selection[];
 	private matchedRanges: vscode.Range[]= [];
+	// when we do an incremental search and want to keep the previous selections,
+	// no are no longer active and are placed in this list
+	private aggregatedSelections : vscode.Selection[] = [];
 
 	constructor(
 		private editor: vscode.TextEditor,
@@ -72,22 +75,26 @@ export class IncrementalSearch {
 
 	public advance(options: SearchOptions = DEFAULT_OPTIONS) {
 		this.applyOptions(options);
-		let nextSelections = [];
+		let nextPositions : vscode.Position[] = [];
+		this.initialSelections = this.matchedRanges.map((r) => new vscode.Selection(r.start,r.end));
 		if(this.options.direction == SearchDirection.backward)
 			for(const sel of this.matchedRanges) {
-				nextSelections.push(new vscode.Selection(sel.start,sel.start));
+				nextPositions.push(sel.start);
   		}
 		else // forward search
 			for(const sel of this.matchedRanges) {
-				nextSelections.push(new vscode.Selection(sel.start.translate(0,1),sel.start.translate(0,1)));
+				nextPositions.push(sel.start.translate(0,1));
 			}
-		if(nextSelections.length > 0)
-      this.initialSelections = nextSelections;
-		return this.update(options);
+		// if(nextSelections.length > 0)
+    //   this.initialSelections = nextSelections;
+		if(nextPositions.length > 0)
+			return this.update(options, nextPositions);
+		else
+			return this.update(options);
 	}
 
-	public getCurrentSelections() : vscode.Selection[] {
-		return this.currentSelections;
+	public getSelections() : vscode.Selection[] {
+		return normalizeSelections(this.aggregatedSelections.concat(this.currentSelections));
 	}
 
 	public getMatchedRanges() {
@@ -98,22 +105,26 @@ export class IncrementalSearch {
 		return this.editor;
 	}
 
-	public update(options: SearchOptions = DEFAULT_OPTIONS) {
+	public update(options: SearchOptions = DEFAULT_OPTIONS, startingPositions?: vscode.Position[]) : {matchedRanges: vscode.Range[], matchedGroups: boolean} {
 		try {
+			if(!startingPositions)
+				startingPositions = this.initialSelections.map((sel) => sel.active);
+
 			this.applyOptions(options);
 
 			const text = this.editor.document.getText();
 			const search = new SearchExpr(this.searchTerm,true,this.useRegExp,this.caseSensitive);
 			var matchingGroups = false;
 			let nextSelections = [];
+			this.matchedRanges = [];
 
-			if(options.expand) {
-				nextSelections = this.currentSelections;
-			} else
-  			this.matchedRanges = [];
+			if(options.expand)
+				this.aggregatedSelections = normalizeSelections(this.aggregatedSelections.concat(this.currentSelections));
+			else
+				this.aggregatedSelections = [];
 
-			for(const sel of this.initialSelections) {
-				const start = this.editor.document.offsetAt(sel.active);
+			for(const pos of startingPositions) {
+				const start = this.editor.document.offsetAt(pos);
 				search.lastIndex = start;
 				const match = search.exec(text,this.direction == SearchDirection.backward);
 				if(match !== null && match.length > 0) {
@@ -144,10 +155,11 @@ export class IncrementalSearch {
 			if(nextSelections.length > 0)
 				this.setEditorSelections(nextSelections);
 			else {
+				this.matchedRanges = this.initialSelections;
 				this.setEditorSelections(this.initialSelections);
 			}
-
-			return {matchedRange: this.matchedRanges, matchedGroups: matchingGroups}
+			this.matchedRanges = normalizeRanges(this.matchedRanges);
+			return {matchedRanges: this.matchedRanges, matchedGroups: matchingGroups}
 		} catch(e) {
 			this.setEditorSelections(this.initialSelections);
 			throw e;
@@ -156,17 +168,46 @@ export class IncrementalSearch {
 
 	private setEditorSelections(selections: vscode.Selection[]) {
 		this.currentSelections = normalizeSelections(selections);
-		if(selections.length == 0)
+		if(this.aggregatedSelections.length + selections.length == 0)
 			return;
-		this.editor.selections = selections;	
+		this.editor.selections = normalizeSelections(this.aggregatedSelections.concat(selections));
 	}
 
 }
 
-function normalizeSelections(selections: vscode.Selection[]) : vscode.Selection[] {
-  return selections
-		.sort((x,y) => x.start.isBefore(y.start) ? -1 : x.start.isAfter(y.start) ? 1 : x.end.isBefore(y.start) ? -1 : x.end.isAfter(y.end) ? 1 : 0)
-		.filter((sel,idx,sels) => idx == 0 ? true : !sel.isEqual(sels[idx-1]));
+const normalizeRanges = (selections: vscode.Range[]) => normalizeRangesGeneric(selections, vscode.Range);
+
+const normalizeSelections = (selections: vscode.Selection[]) => normalizeRangesGeneric(selections, vscode.Selection);
+  // const sorted = selections
+	// 	.slice(0,selections.length)
+	//   .sort((x,y) => x.start.isBefore(y.start) ? -1 : x.start.isAfter(y.start) ? 1 : x.end.isBefore(y.start) ? -1 : x.end.isAfter(y.end) ? 1 : 0);
+	// const results = [sorted.shift()];
+	// let currentIdx = 0;
+	// for(let idx = 0; idx < sorted.length; ++idx) {
+	// 	if(sorted[idx].start.isBeforeOrEqual(results[currentIdx].end))
+	// 		results[currentIdx] = new vscode.Selection(results[currentIdx].start,sorted[idx].end)
+	// 	else {
+	// 		results.push(sorted[idx]);
+	// 		++currentIdx;
+	// 	}
+	// }
+	// return results;
+
+function normalizeRangesGeneric<T extends vscode.Range>(selections: T[], TT: { new(anchor: vscode.Position, active: vscode.Position) : T}) : T[] {
+  const sorted = selections
+		.slice(0,selections.length)
+	  .sort((x,y) => x.start.isBefore(y.start) ? -1 : x.start.isAfter(y.start) ? 1 : x.end.isBefore(y.start) ? -1 : x.end.isAfter(y.end) ? 1 : 0);
+	const results = [sorted.shift()];
+	let currentIdx = 0;
+	for(let idx = 0; idx < sorted.length; ++idx) {
+		if(sorted[idx].start.isBeforeOrEqual(results[currentIdx].end))
+			results[currentIdx] = new TT(results[currentIdx].start,sorted[idx].end)
+		else {
+			results.push(sorted[idx]);
+			++currentIdx;
+		}
+	}
+	return results;
 }
 
 

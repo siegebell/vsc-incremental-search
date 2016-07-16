@@ -58,17 +58,14 @@ export class SearchExpr {
 		} else {
 			let idx;
 			if(reverse)
-				idx = text.lastIndexOf(this.searchTerm.substring(0,this.lastIndex+this.searchTerm.length-1), this.lastIdx);
+				idx = text.substring(0,this.lastIndex+this.searchTerm.length-1).lastIndexOf(this.searchTerm, this.lastIdx);
 			else
 				idx = text.indexOf(this.searchTerm,this.lastIdx);
 
 			if(idx < 0)
 				return null;
 
-			let result = <{index: number} & Array<string>>{};
-			result[0] = this.searchTerm;
-			result.index = idx;
-			return result;
+			return Object.assign([this.searchTerm], {index: idx});
 		}
 	}
 }
