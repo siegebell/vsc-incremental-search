@@ -109,6 +109,7 @@ export function activate(activationContext: vscode.ExtensionContext) {
   vscode.window.onDidChangeActiveTextEditor(async () => {
     const search = searches.get(vscode.window.activeTextEditor);
     if(search) {
+      status.show();
       await vscode.commands.executeCommand('setContext', 'incrementalSearch', true);
       updateSearch(search,{});
     } else {
