@@ -13,7 +13,9 @@
 	"editor.insertSpaces": true,
 	"editor.useTabStops": false,
 	// "terminal.integrated.shell.windows": "C: && cd C:/cygwin64/bin && C:/cygwin64/bin/bash", // "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell_ise.exe"
-	"terminal.integrated.shell.windows": "C:/cygwin64/bin/bash.exe", // "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell_ise.exe"
+	// "terminal.integrated.shell.windows": "C:/cygwin64/bin/bash.exe",
+	"terminal.integrated.shell.windows": "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+	// "terminal.integrated.shell.windows": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell_ise.exe",
 	"terminal.integrated.shellArgs.windows": ["--login","-i"],
   "files.eol": "\n"
 }

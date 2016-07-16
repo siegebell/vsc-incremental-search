@@ -170,7 +170,9 @@ export class IncrementalSearch {
 		this.currentSelections = normalizeSelections(selections);
 		if(this.aggregatedSelections.length + selections.length == 0)
 			return;
-		this.editor.selections = normalizeSelections(this.aggregatedSelections.concat(selections));
+		const normSelections = normalizeSelections(this.aggregatedSelections.concat(selections));
+		this.editor.revealRange(selections[0]);
+		this.editor.selections = normSelections;
 	}
 
 }
