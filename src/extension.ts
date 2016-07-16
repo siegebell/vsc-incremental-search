@@ -95,11 +95,15 @@ export function activate(activationContext: vscode.ExtensionContext) {
     const search = searches.get(editor);
     if(search)
       updateSearch(search, {useRegExp: !search.useRegExp});
+    
+    context.globalState.update("useRegExp", search.useRegExp);
   });
   registerTextEditorCommand('extension.incrementalSearch.toggleCaseSensitivity', (editor: vscode.TextEditor) => {
     const search = searches.get(editor);
     if(search)
       updateSearch(search, {caseSensitive: !search.caseSensitive});
+
+    context.globalState.update("caseSensitive", search.caseSensitive);
   });
 
   // registerTextEditorCommand('extension.incrementalSearch.stop', (editor) => {
@@ -260,9 +264,15 @@ async function doSearch(editor: vscode.TextEditor, options : SearchOptions) {
 
 function advanceSearch(editor: vscode.TextEditor, options: SearchOptions) {
   const search = searches.get(editor);
-  if(!search)
+  if(!search) {
+    const useRegExp = context.globalState.get<boolean>("useRegExp");
+    const caseSensitive = context.globalState.get<boolean>("caseSensitive");
+    if(useRegExp!==undefined)
+      options.useRegExp = useRegExp;
+    if(caseSensitive!==undefined)
+      options.caseSensitive = caseSensitive;
     doSearch(editor, options);
-  else {
+  } else {
     const results = search.advance(options);
     status.update(search.searchTerm, search.caseSensitive, search.useRegExp);
     updateMatchDecorations(search,results);
@@ -315,7 +325,9 @@ function updateSearch(search: IncrementalSearch, options : SearchOptions) : {err
 
 
 
-/** Stops search if anyone else tries to modify the editor selections */
+/** Stops search if anyone else tries to modify the editor selections
+ * this is only used by the inline text input
+ */
 function onSelectionsChanged(event:vscode.TextEditorSelectionChangeEvent) {
   if(configuration.inputMode!='inline')
     return;

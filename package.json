@@ -207,12 +207,10 @@
                 "default": {
                     "dark": {
                         "backgroundColor": "rgba(0,0,255,0.5)",
-                        "borderRadius": "50%",
                         "border": "1pt rgba(0,0,100,0.8) solid"
                     },
                     "light": {
-                        "backgroundColor": "rgba(0,0,255,0.5)",
-                        "borderRadius": "50%",
+                        "backgroundColor": "rgba(100,100,255,0.5)",
                         "border": "1pt rgba(0,0,100,0.8) solid"
                     }
                 } 
