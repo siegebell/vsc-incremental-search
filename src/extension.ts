@@ -21,12 +21,12 @@ interface Configuration {
   matchStyle: vscode.DecorationRenderOptions,
   // when to show the style
   styleMatches: DecorateMatchCondition, 
+  selectionStyle: vscode.DecorationRenderOptions,
 }
 
 let configuration : Configuration = {
   inputMode: 'input-box',
   matchStyle: {
-    borderRadius: '50%',
     dark: {
       border: '1pt white dashed',
     },
@@ -35,6 +35,11 @@ let configuration : Configuration = {
     },
   },
   styleMatches: 'always',
+  selectionStyle: {
+    backgroundColor: 'rgba(0,0,255,0.5)',
+    borderRadius: '50%',
+    border: '1pt rgba(0,0,100,0.8) solid',
+  },
 };
 
 var decorateSelection = false;
@@ -137,11 +142,8 @@ function loadConfiguration() {
 
   if(selectionDecoratation)
     selectionDecoratation.dispose();
-  selectionDecoratation = vscode.window.createTextEditorDecorationType({
-    backgroundColor: 'rgba(0,0,255,0.5)',
-    borderRadius: '50%',
-    border: '1pt rgba(0,0,100,0.8) solid',
-  });
+  selectionDecoratation = null;
+  selectionDecoratation = vscode.window.createTextEditorDecorationType(configuration.selectionStyle);
 
   if(matchDecoratation != null)
     matchDecoratation.dispose();
