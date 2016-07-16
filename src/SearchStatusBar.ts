@@ -49,7 +49,7 @@ export class SearchStatusBar implements vscode.Disposable {
 	}
 
 	public update(searchTerm: string, caseSensitive: boolean, useRegExp: boolean, options = {backward: false}) {
-		this.title.text = 'incremental search: ' + searchTerm;
+		this.title.text = 'incremental search: $(chevron-left)' + searchTerm + '$(chevron-right)';
 		this.title.color = 'white';
 		this.matchCase.color = caseSensitive ? 'white' : 'red';
 		this.useRegExp.color = useRegExp ? 'white' : 'red';
